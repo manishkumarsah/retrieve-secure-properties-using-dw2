@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="556027a0-d8e1-4e4e-a576-621f614935e0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<global-property doc:name="Global Property" doc:id="35dfe366-8e24-450c-a19a-8773b8fb2896" name="encrypted.key" value="${encryption.key}" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="bc6b27b5-794a-48e8-902a-6ed9e181a235" file="dev.secure.properties" key="${encrypted.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<flow name="retrieve-secure-properties-using-dw2" doc:id="53835bac-d2d5-4f3a-9ab2-95415b8d4cb2" >
+		<http:listener doc:name="Listener" doc:id="b7441431-dea3-4bb3-a012-ee9e8625c758" config-ref="HTTP_Listener_config" path="/apisecure"/>
+		<logger level="INFO" doc:name="Logger[secure::com.mac]" doc:id="78494e46-3a08-4894-b1e5-623c817d4416" message="${secure::com.mac}"/>
+		<ee:transform doc:name="p('secure::com.mac')" doc:id="c3a90c26-6596-4301-9ae6-f50b61b8fd6e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	password: p('secure::com.mac')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger[payload]" doc:id="caa3c99f-223e-40a5-9f78-40549c67cd44" message="#[payload]"/>
+	</flow>
+</mule>
